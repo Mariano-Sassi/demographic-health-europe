@@ -1,0 +1,129 @@
+SELECT 
+    country,
+    ROUND(pop65_percentage, 2) AS perc_over65
+FROM population_65
+WHERE year = 2022
+ORDER BY pop65_percentage DESC;
+
+SELECT 
+    p.country,
+    ROUND(p.pop65_percentage, 2) AS perc_over65,
+    ROUND(l.life_expectancy, 1) AS aspettativa_vita,
+    ROUND(h.health_exp_usd, 0) AS spesa_sanitaria_usd
+FROM population_65 p
+JOIN life_expectancy l ON p.country = l.country AND p.year = l.year
+JOIN health_expenditure h ON p.country = h.country AND p.year = h.year
+WHERE p.year = 2019
+ORDER BY l.life_expectancy DESC;
+
+SELECT 
+    p.year,
+    ROUND(p.pop65_percentage, 2) AS perc_over65,
+    ROUND(l.life_expectancy, 1) AS aspettativa_vita,
+    ROUND(h.health_exp_usd, 0) AS spesa_sanitaria_usd
+FROM population_65 p
+JOIN life_expectancy l ON p.country = l.country AND p.year = l.year
+JOIN health_expenditure h ON p.country = h.country AND p.year = h.year
+WHERE p.country = 'Italy'
+AND p.year BETWEEN 2000 AND 2022
+ORDER BY p.year;
+
+SELECT 
+    l.country,
+    ROUND(AVG(l.life_expectancy), 1) AS aspettativa_media,
+    ROUND(AVG(h.health_exp_usd), 0) AS spesa_media_usd,
+    ROUND(AVG(l.life_expectancy) / AVG(h.health_exp_usd) * 1000, 3) AS indice_efficienza
+FROM life_expectancy l
+JOIN health_expenditure h ON l.country = h.country AND l.year = h.year
+WHERE l.year BETWEEN 2010 AND 2019
+GROUP BY l.country
+ORDER BY indice_efficienza DESC;
+
+SELECT 
+    country,
+    ROUND(MIN(pop65_percentage), 2) AS perc_2000,
+    ROUND(MAX(pop65_percentage), 2) AS perc_2022,
+    ROUND(MAX(pop65_percentage) - MIN(pop65_percentage), 2) AS incremento,
+    ROUND((MAX(pop65_percentage) - MIN(pop65_percentage)) / MIN(pop65_percentage) * 100, 1) AS variazione_percentage
+FROM population_65
+WHERE year BETWEEN 2000 AND 2022
+GROUP BY country
+ORDER BY variazione_percentage DESC;
+
+SELECT 
+    country,
+    ROUND(pop65_percentage, 2) AS perc_2022,
+    ROUND(pop65_percentage + (
+        SELECT ROUND((p2.pop65_percentage - p1.pop65_percentage) / 10, 3)
+        FROM population_65 p1
+        JOIN population_65 p2 ON p1.country = p2.country
+        WHERE p1.year = 2012 AND p2.year = 2022
+        AND p1.country = population_65.country
+    ) * 10, 2) AS proiezione_2032,
+    ROUND(pop65_percentage + (
+        SELECT ROUND((p2.pop65_percentage - p1.pop65_percentage) / 10, 3)
+        FROM population_65 p1
+        JOIN population_65 p2 ON p1.country = p2.country
+        WHERE p1.year = 2012 AND p2.year = 2022
+        AND p1.country = population_65.country
+    ) * 20, 2) AS proiezione_2042
+FROM population_65
+WHERE year = 2022
+ORDER BY proiezione_2042 DESC;
+
+CREATE VIEW v_efficienza_sanitaria AS
+SELECT 
+    l.country,
+    ROUND(AVG(l.life_expectancy), 1) AS aspettativa_media,
+    ROUND(AVG(h.health_exp_usd), 0) AS spesa_media_usd,
+    ROUND(AVG(l.life_expectancy) / AVG(h.health_exp_usd) * 1000, 3) AS indice_efficienza
+FROM life_expectancy l
+JOIN health_expenditure h ON l.country = h.country AND l.year = h.year
+WHERE l.year BETWEEN 2010 AND 2019
+GROUP BY l.country
+ORDER BY indice_efficienza DESC;
+
+SELECT 
+    l.country,
+    ROUND(AVG(l.life_expectancy), 1) AS aspettativa_media,
+    ROUND(AVG(h.health_exp_usd), 0) AS spesa_media_usd,
+    ROUND(AVG(l.life_expectancy) / AVG(h.health_exp_usd) * 1000, 3) AS indice_efficienza
+FROM life_expectancy l
+JOIN health_expenditure h ON l.country = h.country AND l.year = h.year
+WHERE l.year BETWEEN 2010 AND 2019
+GROUP BY l.country
+ORDER BY indice_efficienza DESC;
+
+CREATE VIEW v_velocita_invecchiamento AS
+SELECT 
+    country,
+    ROUND(MIN(pop65_percentage), 2) AS percentage_2000,
+    ROUND(MAX(pop65_percentage), 2) AS percentage_2022,
+    ROUND(MAX(pop65_percentage) - MIN(pop65_percentage), 2) AS incremento,
+    ROUND((MAX(pop65_percentage) - MIN(pop65_percentage)) / MIN(pop65_percentage) * 100, 1) AS variazione_percentage
+FROM population_65
+WHERE year BETWEEN 2000 AND 2022
+GROUP BY country
+ORDER BY variazione_percentage DESC;
+
+CREATE VIEW v_proiezioni AS
+SELECT 
+    country,
+    ROUND(pop65_percentage, 2) AS percentage_2022,
+    ROUND(pop65_percentage + (
+        SELECT ROUND((p2.pop65_percentage - p1.pop65_percentage) / 10, 3)
+        FROM population_65 p1
+        JOIN population_65 p2 ON p1.country = p2.country
+        WHERE p1.year = 2012 AND p2.year = 2022
+        AND p1.country = population_65.country
+    ) * 10, 2) AS proiezione_2032,
+    ROUND(pop65_percentage + (
+        SELECT ROUND((p2.pop65_percentage - p1.pop65_percentage) / 10, 3)
+        FROM population_65 p1
+        JOIN population_65 p2 ON p1.country = p2.country
+        WHERE p1.year = 2012 AND p2.year = 2022
+        AND p1.country = population_65.country
+    ) * 20, 2) AS proiezione_2042
+FROM population_65
+WHERE year = 2022
+ORDER BY proiezione_2042 DESC;
